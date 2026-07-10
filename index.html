@@ -93,20 +93,6 @@
     letter-spacing: -0.01em;
     pointer-events: none;
   }
-
-  .frame-overlay {
-    position: absolute;
-    overflow: hidden;
-    pointer-events: none;
-  }
-
-  .frame-overlay img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
 </style>
 </head>
 <body>
@@ -120,9 +106,6 @@
     <div class="ticket-image-wrap">
       <img src="assets/sindorim.png" alt="신도림 승차권">
       <div class="time-overlay"></div>
-      <div class="frame-overlay">
-        <img class="anim-frame" src="assets/bus-anim-01.png" alt="">
-      </div>
     </div>
   </div>
 
@@ -130,9 +113,6 @@
     <div class="ticket-image-wrap">
       <img src="assets/sadang.png" alt="사당 승차권">
       <div class="time-overlay"></div>
-      <div class="frame-overlay">
-        <img class="anim-frame" src="assets/bus-anim-01.png" alt="">
-      </div>
     </div>
   </div>
 
@@ -142,49 +122,12 @@
   // font-weight는 400/700 두 굵기로만 스냅되므로, 얇은 400 기준에 외곽선을 얹어 중간 굵기를 표현
   // (0에 가까울수록 얇고, 값을 키울수록 굵어짐 — 필요하면 이 값만 조절)
   var TEXT_STROKE_RATIO = 0.015;
-  // 버스 사진(하늘+빌딩+버스+도로) 영역 위치(원본 이미지 대비 실측값) — 배경이 흐르는 애니메이션 프레임을 여기에 겹쳐서 재생
-  var PHOTO_BOX = { left: 0.2005, top: 0.260, width: 0.594, height: 0.175 };
-
-  var ANIM_FRAME_COUNT = 16;
-  var ANIM_INTERVAL_MS = 130;
-  var animFrameIndex = 0;
-  var animTimer = null;
-
-  function animFramePath(n) {
-    var num = n < 10 ? '0' + n : '' + n;
-    return 'assets/bus-anim-' + num + '.png';
-  }
-
-  function preloadAnimFrames() {
-    for (var i = 1; i <= ANIM_FRAME_COUNT; i++) {
-      new Image().src = animFramePath(i);
-    }
-  }
-
-  function startFrameAnimation(wrapEl) {
-    stopFrameAnimation();
-    var img = wrapEl.querySelector('.anim-frame');
-    if (!img) return;
-    animTimer = setInterval(function () {
-      animFrameIndex = (animFrameIndex % ANIM_FRAME_COUNT) + 1;
-      img.src = animFramePath(animFrameIndex);
-    }, ANIM_INTERVAL_MS);
-  }
-
-  function stopFrameAnimation() {
-    if (animTimer) {
-      clearInterval(animTimer);
-      animTimer = null;
-    }
-  }
 
   function showTicket(type) {
     document.getElementById('select-screen').classList.remove('active');
     document.getElementById('sindorim-screen').classList.toggle('active', type === 'sindorim');
     document.getElementById('sadang-screen').classList.toggle('active', type === 'sadang');
     updateActiveTimeOverlay();
-    var active = document.querySelector('.ticket-screen.active .ticket-image-wrap');
-    if (active) startFrameAnimation(active);
   }
 
   function formatBoardingTime(date) {
@@ -196,7 +139,6 @@
   function positionTimeOverlay(wrapEl) {
     var img = wrapEl.querySelector('img');
     var overlay = wrapEl.querySelector('.time-overlay');
-    var frames = wrapEl.querySelector('.frame-overlay');
     if (!img.naturalWidth) return;
 
     var cw = wrapEl.clientWidth;
@@ -217,13 +159,6 @@
     overlay.style.fontSize = fontSize + 'px';
     overlay.style.webkitTextStroke = (fontSize * TEXT_STROKE_RATIO) + 'px currentColor';
     overlay.textContent = formatBoardingTime(new Date());
-
-    if (frames) {
-      frames.style.left = (offsetX + PHOTO_BOX.left * dispW) + 'px';
-      frames.style.top = (offsetY + PHOTO_BOX.top * dispH) + 'px';
-      frames.style.width = (PHOTO_BOX.width * dispW) + 'px';
-      frames.style.height = (PHOTO_BOX.height * dispH) + 'px';
-    }
   }
 
   function updateActiveTimeOverlay() {
@@ -242,8 +177,6 @@
       });
     }
   });
-
-  preloadAnimFrames();
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
