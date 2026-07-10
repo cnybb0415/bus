@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>승차권 선택</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html, body {
+    height: 100%;
+    background-color: #7f7f7f;
+    font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    overflow: hidden;
+  }
+
+  .screen {
+    display: none;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .screen.active {
+    display: flex;
+  }
+
+  /* 선택 화면 */
+  #select-screen {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 24px;
+  }
+
+  .select-btn {
+    width: 100%;
+    max-width: 320px;
+    padding: 22px 16px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #ffffff;
+    background-color: #e8332a;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    letter-spacing: -0.02em;
+  }
+
+  .select-btn:active {
+    background-color: #c92a22;
+  }
+
+  /* 티켓 화면 */
+  .ticket-screen {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .ticket-image-wrap {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ticket-image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .time-overlay {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    background-color: #fefefe;
+    color: #000000;
+    font-weight: 400;
+    white-space: nowrap;
+    letter-spacing: -0.01em;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+  <div id="select-screen" class="screen active">
+    <button class="select-btn" onclick="showTicket('sindorim')">[출근] 신도림 (40분)</button>
+    <button class="select-btn" onclick="showTicket('sadang')">[출근] 사당 (50분)</button>
+  </div>
+
+  <div id="sindorim-screen" class="screen ticket-screen">
+    <div class="ticket-image-wrap">
+      <img src="assets/sindorim.png" alt="신도림 승차권">
+      <div class="time-overlay"></div>
+    </div>
+  </div>
+
+  <div id="sadang-screen" class="screen ticket-screen">
+    <div class="ticket-image-wrap">
+      <img src="assets/sadang.png" alt="사당 승차권">
+      <div class="time-overlay"></div>
+    </div>
+  </div>
+
+<script>
+  // 이미지 내 "탑승시간" 값 영역의 원본 이미지 대비 상대 좌표(973x1616 기준 실측값)
+  var TIME_BOX = { left: 0.225, top: 0.690, width: 0.34, height: 0.028 };
+  // font-weight는 400/700 두 굵기로만 스냅되므로, 얇은 400 기준에 외곽선을 얹어 중간 굵기를 표현
+  // (0에 가까울수록 얇고, 값을 키울수록 굵어짐 — 필요하면 이 값만 조절)
+  var TEXT_STROKE_RATIO = 0.015;
+
+  function showTicket(type) {
+    document.getElementById('select-screen').classList.remove('active');
+    document.getElementById('sindorim-screen').classList.toggle('active', type === 'sindorim');
+    document.getElementById('sadang-screen').classList.toggle('active', type === 'sadang');
+    updateActiveTimeOverlay();
+  }
+
+  function formatBoardingTime(date) {
+    var pad = function (n) { return String(n).padStart(2, '0'); };
+    return date.getFullYear() + '.' + pad(date.getMonth() + 1) + '.' + pad(date.getDate()) +
+      ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+  }
+
+  function positionTimeOverlay(wrapEl) {
+    var img = wrapEl.querySelector('img');
+    var overlay = wrapEl.querySelector('.time-overlay');
+    if (!img.naturalWidth) return;
+
+    var cw = wrapEl.clientWidth;
+    var ch = wrapEl.clientHeight;
+    var iw = img.naturalWidth;
+    var ih = img.naturalHeight;
+    var scale = Math.min(cw / iw, ch / ih);
+    var dispW = iw * scale;
+    var dispH = ih * scale;
+    var offsetX = (cw - dispW) / 2;
+    var offsetY = (ch - dispH) / 2;
+
+    overlay.style.left = (offsetX + TIME_BOX.left * dispW) + 'px';
+    overlay.style.top = (offsetY + TIME_BOX.top * dispH) + 'px';
+    overlay.style.width = (TIME_BOX.width * dispW) + 'px';
+    overlay.style.height = (TIME_BOX.height * dispH) + 'px';
+    var fontSize = dispH * 0.023;
+    overlay.style.fontSize = fontSize + 'px';
+    overlay.style.webkitTextStroke = (fontSize * TEXT_STROKE_RATIO) + 'px currentColor';
+    overlay.textContent = formatBoardingTime(new Date());
+  }
+
+  function updateActiveTimeOverlay() {
+    var active = document.querySelector('.ticket-screen.active .ticket-image-wrap');
+    if (active) positionTimeOverlay(active);
+  }
+
+  window.addEventListener('resize', updateActiveTimeOverlay);
+
+  document.querySelectorAll('.ticket-image-wrap img').forEach(function (img) {
+    if (img.complete) {
+      positionTimeOverlay(img.parentElement);
+    } else {
+      img.addEventListener('load', function () {
+        positionTimeOverlay(img.parentElement);
+      });
+    }
+  });
+</script>
+
+</body>
+</html>
