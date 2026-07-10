@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ticket-app-v1';
+const CACHE_NAME = 'ticket-app-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -7,6 +7,10 @@ const ASSETS = [
   './assets/sadang.png',
   './assets/icon-192.png',
   './assets/icon-512.png',
+  './assets/bus-frame-1.png',
+  './assets/bus-frame-2.png',
+  './assets/bus-frame-3.png',
+  './assets/bus-frame-4.png',
 ];
 
 self.addEventListener('install', (event) => {
